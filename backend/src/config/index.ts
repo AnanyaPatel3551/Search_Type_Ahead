@@ -9,18 +9,11 @@ interface Config {
   nodeEnv: string;
   databaseUrl: string;
   redis: {
+    url?: string;
     host: string;
     port: number;
     password?: string;
   };
-}
-
-// Validate that crucial environment variables exist
-const requiredEnvVars = ['DATABASE_URL'];
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Environment variable ${envVar} is missing!`);
-  }
 }
 
 export const config: Config = {
@@ -28,6 +21,7 @@ export const config: Config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   databaseUrl: process.env.DATABASE_URL as string,
   redis: {
+    url: process.env.REDIS_URL,
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
     password: process.env.REDIS_PASSWORD || undefined,
