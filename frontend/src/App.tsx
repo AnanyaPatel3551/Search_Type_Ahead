@@ -5,6 +5,8 @@ interface Suggestion {
   count: number;
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 function App() {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -32,7 +34,7 @@ function App() {
 
     const delayDebounceFn = setTimeout(async () => {
       try {
-        const response = await fetch(`http://localhost:5000/autocomplete?prefix=${encodeURIComponent(trimmed)}`);
+        const response = await fetch(`${API_BASE_URL}/autocomplete?prefix=${encodeURIComponent(trimmed)}`);
         if (!response.ok) throw new Error('Autocomplete failed');
         const data = await response.json();
         setSuggestions(data.results);
@@ -50,7 +52,7 @@ function App() {
   // 2. Fetch trending queries
   const fetchTrending = async () => {
     try {
-      const response = await fetch('http://localhost:5000/trending');
+      const response = await fetch(`${API_BASE_URL}/trending`);
       if (response.ok) {
         const data = await response.json();
         setTrending(data.results);
@@ -88,7 +90,7 @@ function App() {
     setIsInputFocused(false);
 
     try {
-      const response = await fetch('http://localhost:5000/search', {
+      const response = await fetch(`${API_BASE_URL}/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

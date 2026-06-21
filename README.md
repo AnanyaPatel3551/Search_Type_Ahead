@@ -1,8 +1,8 @@
-# Search Typeahead System - Phase 1 Foundation
+# Search Typeahead System
 
-This is the production-ready foundation for the **Search Typeahead System**, designed under strict software architecture standards. 
-
-Phase 1 lays down the containerized infrastructure (PostgreSQL & Redis), the database mapping layout (Prisma ORM schema), the server app setup (Express with Custom Middlewares & TypeScript), and the client status dashboard (React & Vite).
+### 🌐 Live Production Deployments
+* **Frontend Client (Vercel):** [https://search-type-ahead.vercel.app](https://search-type-ahead.vercel.app)
+* **Backend API Server (Render):** [https://search-typeahead-backend.onrender.com](https://search-typeahead-backend.onrender.com)
 
 ---
 
