@@ -1,0 +1,19 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model SearchQuery {
+  id          String   @id @default(uuid())
+  query       String   @unique
+  searchCount Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([searchCount(sort: Desc)])
+  @@index([query])
+}
