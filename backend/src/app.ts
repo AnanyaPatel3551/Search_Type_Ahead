@@ -14,7 +14,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // Configure CORS for security compliance
 app.use(cors({
-  origin: '*', // Customize this with frontend host URL in production
+  origin: [
+    'http://localhost:5173',
+    'https://search-type-ahead.vercel.app',
+    'https://search-type-ahead.vercel.app/'
+  ],
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
