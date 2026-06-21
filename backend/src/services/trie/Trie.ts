@@ -92,4 +92,19 @@ export class Trie {
       this.collectAllWords(childNode, results);
     }
   }
+
+  /**
+   * Retrieves the frequency count of a specific exact matching query.
+   * Returns 0 if the query does not exist in the Trie.
+   */
+  public getCount(query: string): number {
+    let current = this.root;
+    for (const char of query) {
+      if (!current.children.has(char)) {
+        return 0;
+      }
+      current = current.children.get(char)!;
+    }
+    return current.isWord ? current.searchCount : 0;
+  }
 }

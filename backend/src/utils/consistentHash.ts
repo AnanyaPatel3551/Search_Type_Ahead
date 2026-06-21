@@ -13,7 +13,7 @@ export class ConsistentHashRing {
   /**
    * Generates a 32-bit unsigned integer hash for a given key string using MD5.
    */
-  private hashKey(key: string): number {
+  public hashKey(key: string): number {
     const md5 = crypto.createHash('md5').update(key).digest();
     // Read the first 4 bytes as a 32-bit big-endian unsigned integer
     return md5.readUInt32BE(0);
@@ -91,3 +91,5 @@ export class ConsistentHashRing {
     };
   }
 }
+
+export const sharedHashRing = new ConsistentHashRing(['Redis Node 1', 'Redis Node 2', 'Redis Node 3'], 50);

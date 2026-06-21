@@ -1,8 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ConsistentHashRing } from '../utils/consistentHash';
-
-// Instantiate a persistent ring with 3 default simulated nodes
-const hashRing = new ConsistentHashRing(['Redis Node 1', 'Redis Node 2', 'Redis Node 3'], 50);
+import { sharedHashRing as hashRing } from '../utils/consistentHash';
 
 export class ConsistentHashController {
   /**

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { batchService } from '../services/batch.service';
 import { trendingService } from '../services/trending.service';
+import { metricsService } from '../services/metrics.service';
 import { AppError } from '../middleware/error';
 
 export class SearchController {
@@ -36,6 +37,9 @@ export class SearchController {
       trendingService.recordSearchEvent(normalizedQuery).catch((err) => {
         console.error('[SearchController] Failed to log trending search:', err);
       });
+
+      // 6. Record search submission telemetry metric
+      metricsService.recordSearchSubmission();
 
       res.status(200).json({
         status: 'success',

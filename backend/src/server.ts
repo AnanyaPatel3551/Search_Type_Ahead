@@ -5,6 +5,7 @@ import { redis } from './db/redis';
 import { searchRepository } from './repositories/search.repository';
 import { trieService } from './services/trie/TrieService';
 import { batchService } from './services/batch.service';
+import { seedLargeDatasetIfNeeded } from './utils/datasetLoader';
 
 // Start Express server listening on configured port
 const server = app.listen(config.port, async () => {
@@ -14,6 +15,9 @@ const server = app.listen(config.port, async () => {
   try {
     await prisma.$connect();
     console.log('[Database] Successfully connected to PostgreSQL.');
+
+    // Seed dataset of 100,000 queries if necessary
+    await seedLargeDatasetIfNeeded();
 
     // Warm up the Trie index cache
     try {

@@ -1,4 +1,5 @@
 import { prisma } from '../db/prisma';
+import { metricsService } from '../services/metrics.service';
 
 export class SearchRepository {
   /**
@@ -6,6 +7,7 @@ export class SearchRepository {
    * Increments searchCount if the query exists, otherwise creates it with count = 1.
    */
   public async upsertQuery(query: string) {
+    metricsService.recordDatabaseWrites(1);
     return prisma.searchQuery.upsert({
       where: {
         query,
@@ -26,6 +28,7 @@ export class SearchRepository {
    * Retrieves all search queries and their counts from the database.
    */
   public async getAllQueries() {
+    metricsService.recordDatabaseReads(1);
     return prisma.searchQuery.findMany({
       select: {
         query: true,

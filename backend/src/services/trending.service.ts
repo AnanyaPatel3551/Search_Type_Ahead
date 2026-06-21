@@ -1,6 +1,7 @@
 import { redis } from '../db/redis';
 import { metricsService } from './metrics.service';
 import { performance } from 'perf_hooks';
+import { trieService } from './trie/TrieService';
 
 const TRENDING_ZSET_KEY = 'trending:log';
 const TRENDING_CACHE_KEY = 'trending:top10:cache';
@@ -30,7 +31,7 @@ export class TrendingService {
    * Compiles the top 10 trending searches of the last hour.
    * Uses caching to limit database processing.
    */
-  public async getTrendingSearches(): Promise<Array<{ query: string; count: number }>> {
+  public async getTrendingSearches(): Promise<Array<{ query: string; count: number; score?: number; historicalCount?: number }>> {
     const startTime = performance.now();
     try {
       // 1. Check compiled list cache
@@ -65,10 +66,20 @@ export class TrendingService {
         frequencies[query] = (frequencies[query] || 0) + 1;
       }
 
-      // 5. Sort and slice top 10
+      // 5. Apply trending scoring formula: 0.7 * recentCount + 0.3 * historicalCount
+      // where historicalCount is retrieved directly from Trie index
       const sortedTrending = Object.entries(frequencies)
-        .map(([query, count]) => ({ query, count }))
-        .sort((a, b) => b.count - a.count)
+        .map(([query, recentCount]) => {
+          const historicalCount = trieService.getCount(query);
+          const score = 0.7 * recentCount + 0.3 * historicalCount;
+          return {
+            query,
+            count: recentCount,
+            historicalCount,
+            score: parseFloat(score.toFixed(2)),
+          };
+        })
+        .sort((a, b) => b.score - a.score)
         .slice(0, 10);
 
       // 6. Cache the aggregated trending result

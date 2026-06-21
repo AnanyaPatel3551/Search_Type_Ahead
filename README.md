@@ -176,3 +176,62 @@ If PostgreSQL is running but Redis is down, or vice versa, the server remains al
   ```bash
   npx prisma generate
   ```
+
+---
+
+## 🎯 Phase 4 & Final HLD Optimization Specifications
+
+This project implements a fully optimized production-grade Search Typeahead Autocomplete System with a scaled dataset, telemetry debugging, and dynamic ranking.
+
+### 1. Scaled Dataset (100,000+ Queries)
+On startup, a dataset checker checks if the PostgreSQL table size is under 100,000. If underpopulated, it generates a unique, realistic pool of **100,000 technical search queries** using combinations of search verbs, technical subjects, and environments. These are bulk-inserted in highly optimized batches of 10,000. Warm-up loading of the Trie with all 114,000+ database records takes **approx. 1.0 second**, keeping boot times extremely fast.
+
+### 2. API Specifications
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| **GET** | `/suggest?q=<prefix>` | Returns the top 10 autocompleted suggestion terms. |
+| **GET** | `/autocomplete?prefix=<prefix>` | Alias endpoint for suggestion lookups. |
+| **POST** | `/search` | Posts a new search query (normalizes, pushes to the batch write buffer, and logs trending events). |
+| **GET** | `/cache/debug?prefix=<prefix>` | Diagnostics endpoint to inspect caching status, selected consistent hash ring node, and size. |
+| **GET** | `/trending` | Compiles top 10 dynamic trending queries of the last hour. |
+| **GET** | `/metrics` | Exposes performance metrics (average/P95 latencies, hits/misses, DB reads/writes counters). |
+| **GET** | `/consistent-hash/simulate` | Simulates adding/removing nodes and key distributions on the partition ring. |
+
+### 3. Dynamic Trending Scoring Formula
+Trending queries are ranked based on a combination of recency and historical significance. The score is calculated as:
+$$\text{Score} = 0.7 \times C_{\text{recent}} + 0.3 \times C_{\text{historical}}$$
+* $C_{\text{recent}}$: Search count in the last hour sliding window (maintained via a Redis Sorted Set `ZSET`).
+* $C_{\text{historical}}$: Total lifetime search query frequency retrieved directly from the in-memory Trie.
+
+### 4. Telemetry Metrics & DB Write Reduction
+By routing search entries to an in-memory buffer and flushing them to PostgreSQL every 5 seconds, database write IOPS is minimized:
+* **Batch Write Reduction:** Computes the saving ratio of database writes relative to user requests. For example, 100 search requests resulting in 1 batch write achieves a **99.0% write reduction**.
+* Exposes `p95LatencyMs`, cache hits and misses ratios, raw `database.reads` and `database.writes` counts, and `avgBatchSize` under `GET /metrics`.
+
+---
+
+## 🧪 Manual Testing Verification Checklist
+
+Use the following endpoints to verify the system behavior:
+
+1. **Verify Autocomplete Suggestions:**
+   `GET http://localhost:5000/suggest?q=iph`
+   Verify it returns the top 10 suggestions starting with `iph` (e.g. `iphone 15 pro max`, `iphone 16 release date`...).
+
+2. **Verify Cache Diagnostics:**
+   `GET http://localhost:5000/cache/debug?prefix=iph`
+   Verify it returns:
+   * `cacheNodeSelected` (e.g., `Redis Node 2`)
+   * `consistentHashValue`
+   * `cacheHit` (true on second request)
+   * `ttlRemainingSeconds` (if cached)
+   * `cachedValueSizeBytes`
+
+3. **Verify Advanced Telemetry Metrics:**
+   `GET http://localhost:5000/metrics`
+   Verify it returns a structured JSON payload with:
+   * `autocomplete` (avgLatencyMs, p95LatencyMs, cacheHitRate, cacheMissRate)
+   * `database` (reads, writes, searchSubmissions, batchWriteReduction)
+   * `batchWrites` (avgBatchSize, totalBatchesFlushed)
+

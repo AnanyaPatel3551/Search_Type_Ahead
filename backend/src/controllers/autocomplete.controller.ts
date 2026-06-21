@@ -12,22 +12,25 @@ export class AutocompleteController {
    */
   public async handleAutocomplete(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { prefix } = req.query;
+      const queryParam = req.query.prefix || req.query.q;
 
       // 1. Validate prefix presence
-      if (prefix === undefined || prefix === null) {
-        throw new AppError('Query parameter "prefix" is required', 400);
+      if (queryParam === undefined || queryParam === null) {
+        throw new AppError('Query parameter "prefix" or "q" is required', 400);
       }
 
-      if (typeof prefix !== 'string') {
-        throw new AppError('Query parameter "prefix" must be a string', 400);
+      if (typeof queryParam !== 'string') {
+        throw new AppError('Query parameter must be a string', 400);
       }
 
       // Start timing with microsecond precision
       const startTime = performance.now();
 
-      // 2. Normalize input prefix
-      const normalizedPrefix = prefix.trim().toLowerCase();
+      // 2. Normalize input prefix and handle large prefixes gracefully (truncate to 100 characters)
+      let normalizedPrefix = queryParam.trim().toLowerCase();
+      if (normalizedPrefix.length > 100) {
+        normalizedPrefix = normalizedPrefix.substring(0, 100);
+      }
 
       // 3. Return early if prefix is empty after trimming
       if (normalizedPrefix === '') {

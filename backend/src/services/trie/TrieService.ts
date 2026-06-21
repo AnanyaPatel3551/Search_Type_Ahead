@@ -35,6 +35,13 @@ class TrieService {
     const duration = Date.now() - start;
     console.log(`[TrieService] Trie warm up complete. Load time: ${duration}ms`);
   }
+
+  /**
+   * Returns exact match count for a query.
+   */
+  public getCount(query: string): number {
+    return this.trie.getCount(query);
+  }
 }
 
 export const trieService = new TrieService();
